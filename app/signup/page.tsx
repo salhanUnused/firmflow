@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "@/components/Logo";
+import { ScreenLoader } from "@/components/ScreenLoader";
 import { Button, Field, inputClass } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 
@@ -39,6 +40,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-[#0b0d12] px-4 py-10">
+      {busy ? <ScreenLoader overlay label="Creating workspace…" /> : null}
       <div className="mx-auto w-full max-w-md">
         <Logo className="justify-center" />
         <h1 className="mt-8 text-center text-2xl font-medium tracking-tight">

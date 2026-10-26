@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { Topbar } from "@/components/Topbar";
 import { DeployWizard } from "@/components/DeployWizard";
+import { ScreenLoader } from "@/components/ScreenLoader";
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/roles";
 
@@ -29,11 +30,7 @@ export function AppShell({
   }, [ready, user, router, pathname]);
 
   if (!ready || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0d12] text-sm text-zinc-500">
-        Loading workspace…
-      </div>
-    );
+    return <ScreenLoader label="Loading workspace…" />;
   }
 
   return (

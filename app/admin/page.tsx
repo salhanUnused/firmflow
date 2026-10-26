@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
+import { ScreenLoader } from "@/components/ScreenLoader";
 import { Button, Field, inputClass } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ export default function AdminGatePage() {
 
   return (
     <div className="min-h-screen bg-[#0b0d12] px-4 py-10">
+      {busy ? <ScreenLoader overlay label="Opening console…" /> : null}
       <div className="mx-auto w-full max-w-md">
         <Logo className="justify-center" href="/admin" />
         <h1 className="mt-8 text-center text-2xl font-medium tracking-tight">

@@ -53,3 +53,38 @@ body {
     opacity: 0.35;
   }
 }
+
+.ff-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-top-color: #4b80ff;
+  border-radius: 50%;
+  animation: ff-spin 0.7s linear infinite;
+}
+
+@keyframes ff-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ff-route-progress-bar {
+  animation: ff-route-slide 0.9s ease-in-out infinite;
+}
+
+@keyframes ff-route-slide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-spinner,
+  .ff-route-progress-bar {
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+}

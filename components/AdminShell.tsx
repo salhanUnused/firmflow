@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { ScreenLoader } from "@/components/ScreenLoader";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -34,11 +35,7 @@ export function AdminShell({
   }, [ready, user, router]);
 
   if (!ready || !user?.platformAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0b0d12] text-sm text-zinc-500">
-        Loading console…
-      </div>
-    );
+    return <ScreenLoader label="Loading console…" />;
   }
 
   return (
