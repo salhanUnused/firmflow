@@ -1,7 +1,8 @@
 "use client";
 
-import { Menu, Rocket } from "lucide-react";
+import { Rocket } from "lucide-react";
 import { Button } from "@/components/ui";
+import { MenuToggleIcon } from "@/components/MobileNav";
 import { useFleet } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { can } from "@/lib/roles";
@@ -9,26 +10,29 @@ import { can } from "@/lib/roles";
 export function Topbar({
   title,
   subtitle,
+  menuOpen = false,
   onMenu,
 }: {
   title: string;
   subtitle?: string;
+  menuOpen?: boolean;
   onMenu: () => void;
 }) {
   const { openWizard } = useFleet();
   const { user } = useAuth();
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/10 bg-[#0b0d12]/92 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-[#0b0d12]">
       <div className="flex items-center justify-between gap-3 px-4 py-3 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/12 text-white lg:hidden"
+            className="relative z-[90] inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/12 text-white lg:hidden"
             onClick={onMenu}
-            aria-label="Open menu"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
           >
-            <Menu size={18} />
+            <MenuToggleIcon open={menuOpen} />
           </button>
           <div className="min-w-0">
             <h1 className="truncate text-base font-medium tracking-tight text-white sm:text-lg">

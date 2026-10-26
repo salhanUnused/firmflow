@@ -29,6 +29,13 @@ export function AppShell({
     }
   }, [ready, user, router, pathname]);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   if (!ready || !user) {
     return <ScreenLoader label="Loading workspace…" />;
   }
@@ -37,7 +44,12 @@ export function AppShell({
     <div className="flex min-h-screen bg-[#0b0d12]">
       <Sidebar open={open} onClose={() => setOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar title={title} subtitle={subtitle} onMenu={() => setOpen(true)} />
+        <Topbar
+          title={title}
+          subtitle={subtitle}
+          menuOpen={open}
+          onMenu={() => setOpen((value) => !value)}
+        />
         <main className="flex-1 px-4 py-5 sm:px-6 lg:px-8">{children}</main>
       </div>
       {can(user.role, "deploy") ? <DeployWizard /> : null}

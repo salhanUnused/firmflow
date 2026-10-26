@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -16,11 +17,11 @@ import {
   ScrollText,
   Settings,
   Users,
-  X,
   CircuitBoard,
   Shield,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { MenuToggleIcon } from "@/components/MobileNav";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useFleet } from "@/lib/store";
@@ -52,18 +53,29 @@ export function Sidebar({
   const { user, signOut } = useAuth();
   const { org } = useFleet();
 
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
     <>
-      {open ? (
-        <button
-          className="fixed inset-0 z-30 bg-black/65 lg:hidden"
-          onClick={onClose}
-          aria-label="Close menu"
-        />
-      ) : null}
+      <button
+        type="button"
+        tabIndex={open ? 0 : -1}
+        className={cn(
+          "fixed inset-0 z-40 bg-[#05060a]/80 transition-opacity duration-300 ease-out motion-reduce:transition-none lg:hidden",
+          open ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+        onClick={onClose}
+        aria-label="Close menu"
+      />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[min(20rem,86vw)] flex-col border-r border-white/10 bg-[#0e1118] px-4 py-4 transition-transform duration-200 lg:static lg:w-60 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-[min(20.5rem,86vw)] flex-col border-r border-white/10 bg-[#0e1118] px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none lg:static lg:z-auto lg:w-60 lg:translate-x-0 lg:pt-4",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -71,11 +83,11 @@ export function Sidebar({
           <Logo href="/dashboard" size={34} />
           <button
             type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/12 lg:hidden"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/12 text-white lg:hidden"
             onClick={onClose}
             aria-label="Close menu"
           >
-            <X size={16} />
+            <MenuToggleIcon open />
           </button>
         </div>
         <p className="mt-6 truncate px-2 text-[11px] text-zinc-500">
