@@ -122,7 +122,7 @@ export default function TeamPage() {
           </Field>
           <Field label="Role">
             <select className={inputClass} value={role} onChange={(event) => setRole(event.target.value as UserRole)}>
-              {(["admin", "engineer", "operator", "viewer"] as UserRole[]).map((item) => (
+              {(["engineer", "operator", "viewer"] as UserRole[]).map((item) => (
                 <option key={item} value={item}>
                   {ROLE_LABEL[item]}
                 </option>

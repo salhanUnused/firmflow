@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import { api } from "@/lib/api";
-import { DEMO_PASSWORD, TEAM } from "@/lib/demo-users";
 import type { AuthUser, OrgState, TeamMember, UserRole } from "@/types";
 
 interface AuthContextValue {
@@ -27,15 +26,14 @@ interface AuthContextValue {
     orgName: string;
     projectName: string;
   }) => Promise<void>;
-  signInDemo: (role?: UserRole) => Promise<void>;
-  signInAdmin: (email: string, password: string) => Promise<void>;
+  signInAdmin: (email: string, password: string) => Promise<AuthUser>;
   registerAdmin: (input: {
     fullName: string;
     email: string;
     password: string;
     orgName?: string;
     inviteSecret?: string;
-  }) => Promise<void>;
+  }) => Promise<AuthUser>;
   signOut: () => Promise<void>;
   updateRole: (memberId: string, role: UserRole) => Promise<void>;
 }
@@ -135,14 +133,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [apply],
   );
 
-  const signInDemo = useCallback(
-    async (role: UserRole = "admin") => {
-      const member = TEAM.find((item) => item.role === role) ?? TEAM[0];
-      await signIn(member.email, DEMO_PASSWORD);
-    },
-    [signIn],
-  );
-
   const loadSession = useCallback(async () => {
     const data = await api<{
       user: AuthUser;
@@ -150,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       persistence?: string;
     }>("/api/auth/session");
     apply(data);
+    return data.user;
   }, [apply]);
 
   const signInAdmin = useCallback(
@@ -158,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      await loadSession();
+      return loadSession();
     },
     [loadSession],
   );
@@ -175,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: "POST",
         body: JSON.stringify(input),
       });
-      await loadSession();
+      return loadSession();
     },
     [loadSession],
   );
@@ -207,7 +198,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refresh,
       signIn,
       signUp,
-      signInDemo,
       signInAdmin,
       registerAdmin,
       signOut,
@@ -221,7 +211,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refresh,
       signIn,
       signUp,
-      signInDemo,
       signInAdmin,
       registerAdmin,
       signOut,

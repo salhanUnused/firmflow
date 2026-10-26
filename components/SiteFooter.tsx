@@ -8,7 +8,7 @@ const columns = [
       { href: "#product", label: "Device inventory" },
       { href: "#features", label: "OTA updates" },
       { href: "#features", label: "Rollback" },
-      { href: "/login", label: "Helio Labs demo" },
+      { href: "/login", label: "Sign in" },
     ],
   },
   {

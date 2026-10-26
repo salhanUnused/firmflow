@@ -11,14 +11,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Helio Labs demo password: `demo1234`
+- `/admin` — register or sign in as a workspace **admin**
+- `/signup` and `/login` — engineer / operator / viewer accounts
 
-- `admin@firmflow.io` — Admin
-- `priya.nair@firmflow.io` — Engineer
-- `marcus.chen@firmflow.io` — Operator
-- `sofia.alvarez@firmflow.io` — Viewer
-
-A new signup creates an isolated workspace. Helio devices are not visible there.
+A new signup creates an isolated workspace as an engineer. Admins are created only at `/admin`. Dummy Helio Labs logins are not seeded.
 
 ## Vercel
 

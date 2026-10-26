@@ -47,7 +47,7 @@ export default function SignupPage() {
           Create your workspace
         </h1>
         <p className="mt-2 text-center text-sm text-zinc-500">
-          You become the admin. Then create a project and register a device.
+          Creates an engineer account. Workspace admins register at /admin.
         </p>
         <form className="mt-8 space-y-4" onSubmit={(event) => void submit(event)}>
           <Field label="Full name">
@@ -117,6 +117,12 @@ export default function SignupPage() {
           Already have an account?{" "}
           <Link href="/login" className="text-zinc-200 underline-offset-2 hover:underline">
             Sign in
+          </Link>
+        </p>
+        <p className="mt-3 text-center text-sm text-zinc-600">
+          Need the admin role?{" "}
+          <Link href="/admin" className="text-zinc-400 underline-offset-2 hover:underline">
+            Register as admin
           </Link>
         </p>
       </div>

@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { ScreenLoader } from "@/components/ScreenLoader";
 import { useAuth } from "@/lib/auth";
 
 const links = [
@@ -16,9 +14,7 @@ const links = [
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const { user, signInDemo } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -27,19 +23,8 @@ export function SiteHeader() {
     };
   }, [open]);
 
-  const enterDemo = async () => {
-    setBusy(true);
-    try {
-      await signInDemo("admin");
-      router.push("/dashboard");
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b0d12]/90 backdrop-blur-md">
-      {busy ? <ScreenLoader overlay label="Opening Helio Labs…" /> : null}
       <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-4 sm:px-6">
         <Logo size={38} />
         <nav className="hidden items-center gap-7 text-[13px] text-zinc-400 md:flex">
@@ -140,16 +125,6 @@ export function SiteHeader() {
                   >
                     Create account
                   </Link>
-                  <button
-                    type="button"
-                    className="py-2 text-sm text-zinc-400"
-                    onClick={() => {
-                      setOpen(false);
-                      void enterDemo();
-                    }}
-                  >
-                    Jump into the Helio Labs demo
-                  </button>
                 </>
               )}
             </div>

@@ -202,6 +202,9 @@ export async function signInUser(email: string, password: string) {
     if (!user || !verifyPassword(password, user.passwordHash)) {
       throw new ApiError(401, "Email or password is wrong.");
     }
+    if (user.role === "admin" || user.platformAdmin) {
+      throw new ApiError(403, "Admins sign in at /admin.");
+    }
     audit(world, user, "auth.sign_in", user.id, "Signed in");
     return toAuthUser(world, user);
   });
@@ -251,8 +254,8 @@ export async function signUpUser(input: {
       email,
       passwordHash: hashPassword(input.password),
       fullName: input.fullName.trim(),
-      role: "admin",
-      title: "Owner",
+      role: "engineer",
+      title: "Member",
       orgId,
       createdAt: now,
     };
@@ -315,10 +318,10 @@ export async function signInPlatformAdmin(email: string, password: string) {
     if (!user || !verifyPassword(password, user.passwordHash)) {
       throw new ApiError(401, "Email or password is wrong.");
     }
-    if (!user.platformAdmin) {
-      throw new ApiError(403, "This sign-in is for platform operators. Use /login for a workspace.");
+    if (user.role !== "admin" && !user.platformAdmin) {
+      throw new ApiError(403, "This sign-in is for admins. Use /login for a team account.");
     }
-    audit(world, user, "platform.sign_in", user.id, "Signed in to platform console");
+    audit(world, user, "platform.sign_in", user.id, "Signed in as admin");
     return toAuthUser(world, user);
   });
 }
@@ -347,12 +350,7 @@ export async function signUpPlatformAdmin(
     const operatorsExist = hasPlatformOperators(world);
     const actor = actorId ? world.users.find((item) => item.id === actorId) : null;
     const secretOk = Boolean(envSecret && input.inviteSecret && input.inviteSecret === envSecret);
-    if (operatorsExist && !actor?.platformAdmin && !secretOk) {
-      throw new ApiError(
-        403,
-        "Platform registration is closed. Sign in as an operator, then invite from the console.",
-      );
-    }
+    const platformAdmin = !operatorsExist || Boolean(actor?.platformAdmin) || secretOk;
 
     const now = new Date().toISOString();
     const orgId = uid("org");
@@ -384,10 +382,10 @@ export async function signUpPlatformAdmin(
       passwordHash: hashPassword(input.password),
       fullName: input.fullName.trim(),
       role: "admin",
-      title: "Platform operator",
+      title: platformAdmin ? "Platform operator" : "Admin",
       orgId,
       createdAt: now,
-      platformAdmin: true,
+      platformAdmin,
     };
     world.users.push(user);
     world.alertRules.push(
@@ -1057,6 +1055,9 @@ export async function inviteMember(
     const email = input.email.trim().toLowerCase();
     if (world.users.some((item) => item.email === email)) {
       throw new ApiError(409, "That email is already registered.");
+    }
+    if (input.role === "admin") {
+      throw new ApiError(400, "Admins register at /admin.");
     }
     const member: UserRecord = {
       id: uid("usr"),

@@ -16,14 +16,19 @@ export default function AdminGatePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [orgName, setOrgName] = useState("FirmFlow ops");
+  const [orgName, setOrgName] = useState("");
   const [inviteSecret, setInviteSecret] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (ready && user?.platformAdmin) {
+    if (!ready || !user) return;
+    if (user.platformAdmin) {
       router.replace("/admin/dashboard");
+      return;
+    }
+    if (user.role === "admin") {
+      router.replace("/dashboard");
     }
   }, [ready, user, router]);
 
@@ -36,18 +41,17 @@ export default function AdminGatePage() {
     }
     setBusy(true);
     try {
-      if (mode === "signin") {
-        await signInAdmin(email, password);
-      } else {
-        await registerAdmin({
-          fullName,
-          email,
-          password,
-          orgName,
-          inviteSecret: inviteSecret || undefined,
-        });
-      }
-      router.push("/admin/dashboard");
+      const next =
+        mode === "signin"
+          ? await signInAdmin(email, password)
+          : await registerAdmin({
+              fullName,
+              email,
+              password,
+              orgName,
+              inviteSecret: inviteSecret || undefined,
+            });
+      router.push(next.platformAdmin ? "/admin/dashboard" : "/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not continue.");
     } finally {
@@ -57,14 +61,14 @@ export default function AdminGatePage() {
 
   return (
     <div className="min-h-screen bg-[#0b0d12] px-4 py-10">
-      {busy ? <ScreenLoader overlay label="Opening console…" /> : null}
+      {busy ? <ScreenLoader overlay label="Signing in…" /> : null}
       <div className="mx-auto w-full max-w-md">
         <Logo className="justify-center" href="/admin" />
         <h1 className="mt-8 text-center text-2xl font-medium tracking-tight">
-          Platform console
+          Admin
         </h1>
         <p className="mt-2 text-center text-sm text-zinc-500">
-          Operators only. This page is not part of the product demo.
+          Register or sign in with the admin role. Team members use the normal login.
         </p>
         <div className="mt-8 grid grid-cols-2 gap-1 rounded-lg border border-white/10 p-1">
           <button
@@ -100,11 +104,13 @@ export default function AdminGatePage() {
                   required
                 />
               </Field>
-              <Field label="Ops workspace name">
+              <Field label="Workspace name">
                 <input
                   className={inputClass}
                   value={orgName}
                   onChange={(event) => setOrgName(event.target.value)}
+                  placeholder="Acme Robotics"
+                  required
                 />
               </Field>
             </>
@@ -143,7 +149,7 @@ export default function AdminGatePage() {
                   required
                 />
               </Field>
-              <Field label="Invite secret (optional)">
+              <Field label="Operator secret (optional)">
                 <input
                   className={inputClass}
                   type="password"
@@ -159,8 +165,8 @@ export default function AdminGatePage() {
             {busy
               ? "Working…"
               : mode === "signin"
-                ? "Sign in"
-                : "Create operator"}
+                ? "Sign in as admin"
+                : "Create admin"}
           </Button>
         </form>
       </div>

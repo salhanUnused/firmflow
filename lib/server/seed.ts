@@ -1,6 +1,6 @@
-import { hashPassword, sha256, signFirmwareHash } from "@/lib/server/crypto";
+import { sha256, signFirmwareHash } from "@/lib/server/crypto";
 import { saveBlob, type World } from "@/lib/server/store";
-import { DEMO_PASSWORD, TEAM } from "@/lib/demo-users";
+import { DUMMY_USER_EMAILS, DUMMY_USER_IDS } from "@/lib/demo-users";
 import { INITIAL_DEPLOYMENTS, INITIAL_DEVICES, INITIAL_FIRMWARE } from "@/lib/mock-data";
 import type {
   AlertRule,
@@ -20,7 +20,18 @@ function blobFor(version: string) {
   );
 }
 
+const SEED_ACTOR_ID = "usr-seed";
+const SEED_ACTOR_EMAIL = "seed@firmflow.io";
+
+function purgeDummyUsers(world: World) {
+  world.users = world.users.filter(
+    (user) =>
+      !DUMMY_USER_IDS.has(user.id) && !DUMMY_USER_EMAILS.has(user.email.toLowerCase()),
+  );
+}
+
 export async function ensureSeed(world: World) {
+  purgeDummyUsers(world);
   if (world.orgs.some((org) => org.id === HELIO_ORG_ID)) {
     return;
   }
@@ -48,20 +59,6 @@ export async function ensureSeed(world: World) {
 
   world.orgs.push(org);
   world.projects.push(project);
-
-  const passwordHash = hashPassword(DEMO_PASSWORD);
-  for (const member of TEAM) {
-    world.users.push({
-      id: member.id,
-      email: member.email.toLowerCase(),
-      passwordHash,
-      fullName: member.fullName,
-      role: member.role,
-      title: member.title,
-      orgId: HELIO_ORG_ID,
-      createdAt: now,
-    });
-  }
 
   const devices: Device[] = INITIAL_DEVICES.map((device, index) => ({
     ...device,
@@ -107,7 +104,7 @@ export async function ensureSeed(world: World) {
       firmwareId:
         world.firmware.find((item) => item.version === deployment.firmwareVersion)?.id ??
         "fw-130",
-      createdBy: TEAM[0].id,
+      createdBy: SEED_ACTOR_ID,
       results: Object.fromEntries(
         deployment.deviceIds.map((id) => [
           id,
@@ -160,8 +157,8 @@ export async function ensureSeed(world: World) {
     id: "aud-seed",
     orgId: HELIO_ORG_ID,
     at: now,
-    actorId: TEAM[0].id,
-    actorEmail: TEAM[0].email,
+    actorId: SEED_ACTOR_ID,
+    actorEmail: SEED_ACTOR_EMAIL,
     action: "workspace.seeded",
     target: HELIO_ORG_ID,
     detail: "Helio Labs demo workspace created",

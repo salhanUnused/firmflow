@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { DUMMY_USER_EMAILS, DUMMY_USER_IDS } from "@/lib/demo-users";
 import type {
   Alert,
   AlertRule,
@@ -108,6 +109,10 @@ async function writeToSupabase(client: SupabaseClient, world: World) {
 }
 
 function normalizeWorld(world: World) {
+  world.users = world.users.filter(
+    (user) =>
+      !DUMMY_USER_IDS.has(user.id) && !DUMMY_USER_EMAILS.has(user.email.toLowerCase()),
+  );
   for (const user of world.users) {
     if (user.platformAdmin == null) user.platformAdmin = false;
   }

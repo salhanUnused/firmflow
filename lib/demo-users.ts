@@ -7,8 +7,6 @@ export const ORG = {
   plan: "Early access",
 };
 
-export const DEMO_PASSWORD = "demo1234";
-
 export const TEAM: TeamMember[] = [
   {
     id: "22222222-2222-2222-2222-222222222222",
@@ -43,6 +41,11 @@ export const TEAM: TeamMember[] = [
     initials: "SA",
   },
 ];
+
+export const DUMMY_USER_IDS = new Set(TEAM.map((member) => member.id));
+export const DUMMY_USER_EMAILS = new Set(
+  TEAM.map((member) => member.email.toLowerCase()),
+);
 
 export const ACTIVITIES: ActivityItem[] = [
   {

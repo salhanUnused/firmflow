@@ -7,14 +7,12 @@ import { Logo } from "@/components/Logo";
 import { ScreenLoader } from "@/components/ScreenLoader";
 import { Button, Field, inputClass } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
-import { DEMO_PASSWORD, TEAM } from "@/lib/demo-users";
-import { ROLE_LABEL } from "@/lib/roles";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { signIn, signInDemo } = useAuth();
-  const [email, setEmail] = useState("admin@firmflow.io");
-  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -41,7 +39,7 @@ export default function LoginPage() {
           Sign in
         </h1>
         <p className="mt-2 text-center text-sm text-zinc-500">
-          Helio Labs demo or your own workspace
+          Engineers, operators, and viewers. Admins use a separate sign-in.
         </p>
         <form className="mt-8 space-y-4" onSubmit={(event) => void submit(event)}>
           <Field label="Work email">
@@ -75,43 +73,12 @@ export default function LoginPage() {
             Create one
           </Link>
         </p>
-        <div className="mt-8 rounded-lg border border-white/10 p-4">
-          <p className="text-xs uppercase tracking-[0.14em] text-zinc-500">
-            Demo accounts · password {DEMO_PASSWORD}
-          </p>
-          <ul className="mt-3 space-y-2">
-            {TEAM.map((member) => (
-              <li key={member.id}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-left text-sm hover:bg-white/5"
-                  onClick={() => {
-                    setEmail(member.email);
-                    setPassword(DEMO_PASSWORD);
-                    void (async () => {
-                      setBusy(true);
-                      setError("");
-                      try {
-                        await signInDemo(member.role);
-                        router.push("/dashboard");
-                      } catch (err) {
-                        setError(err instanceof Error ? err.message : "Demo sign-in failed.");
-                      } finally {
-                        setBusy(false);
-                      }
-                    })();
-                  }}
-                >
-                  <span>
-                    {member.fullName}
-                    <span className="block text-xs text-zinc-500">{member.email}</span>
-                  </span>
-                  <span className="text-xs text-zinc-400">{ROLE_LABEL[member.role]}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <p className="mt-3 text-center text-sm text-zinc-600">
+          Workspace admin?{" "}
+          <Link href="/admin" className="text-zinc-400 underline-offset-2 hover:underline">
+            Sign in as admin
+          </Link>
+        </p>
       </div>
     </div>
   );
