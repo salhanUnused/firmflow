@@ -2,6 +2,11 @@ import { existsSync, lstatSync, mkdirSync, readlinkSync, rmSync, symlinkSync } f
 import { homedir } from "os";
 import { join } from "path";
 
+if (process.env.VERCEL || process.env.CI) {
+  console.log("Skipping local Next cache on CI/Vercel");
+  process.exit(0);
+}
+
 const projectRoot = process.cwd();
 const localDir = join(homedir(), "Library", "Caches", "firmflow-next");
 const links = [
