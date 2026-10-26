@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FirmFlow
 
-## Getting Started
+Firmware-as-a-Service for small electronics teams. Sign up, create a project, register devices, upload a signed firmware binary, simulate or live-deploy to ESP32, watch telemetry, and recover from failed updates.
 
-First, run the development server:
+## Demo
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Helio Labs demo password: `demo1234`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `admin@firmflow.io` — Admin
+- `priya.nair@firmflow.io` — Engineer
+- `marcus.chen@firmflow.io` — Operator
+- `sofia.alvarez@firmflow.io` — Viewer
 
-## Learn More
+A new signup creates an isolated workspace. Helio devices are not visible there.
 
-To learn more about Next.js, take a look at the following resources:
+## Vercel
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Push this repo to GitHub (the `salhanUnused` account, not `ch1mkin`).
+2. Import the repo in Vercel.
+3. Set environment variables from `.env.example`.
+4. For durable storage, create a Supabase project, run `supabase/firmflow.sql`, and set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`.
+5. Set `NEXT_PUBLIC_APP_URL` to the Vercel URL.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Without Supabase, the server store is in-memory on Vercel and resets on cold starts. Local `npm run dev` writes `.data/world.json`.
 
-## Deploy on Vercel
+## ESP32
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See the in-app **ESP32** page and `firmware-esp32/FirmFlowClient`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The board authenticates with a device token, downloads firmware, verifies SHA-256, installs with the ESP32 `Update` library, then reports the running version. A failed verify/install keeps the last good build; FirmFlow records the failure and can auto-rollback.
+
+## API (device)
+
+```
+POST /api/device/heartbeat   Authorization: Bearer <token>
+GET  /api/device/ota
+GET  /api/device/ota/file
+POST /api/device/ota/result
+POST /api/device/logs
+```

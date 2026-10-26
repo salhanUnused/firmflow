@@ -1,14 +1,18 @@
 {
-  "name": "firmfleet",
+  "name": "firmflow",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/use-local-next-cache.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/use-local-next-cache.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.114.0",
+    "lucide-react": "^1.39.0",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8"
