@@ -28,6 +28,14 @@ interface AuthContextValue {
     projectName: string;
   }) => Promise<void>;
   signInDemo: (role?: UserRole) => Promise<void>;
+  signInAdmin: (email: string, password: string) => Promise<void>;
+  registerAdmin: (input: {
+    fullName: string;
+    email: string;
+    password: string;
+    orgName?: string;
+    inviteSecret?: string;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
   updateRole: (memberId: string, role: UserRole) => Promise<void>;
 }
@@ -135,6 +143,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [signIn],
   );
 
+  const loadSession = useCallback(async () => {
+    const data = await api<{
+      user: AuthUser;
+      state: OrgState;
+      persistence?: string;
+    }>("/api/auth/session");
+    apply(data);
+  }, [apply]);
+
+  const signInAdmin = useCallback(
+    async (email: string, password: string) => {
+      await api("/api/admin/signin", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      await loadSession();
+    },
+    [loadSession],
+  );
+
+  const registerAdmin = useCallback(
+    async (input: {
+      fullName: string;
+      email: string;
+      password: string;
+      orgName?: string;
+      inviteSecret?: string;
+    }) => {
+      await api("/api/admin/register", {
+        method: "POST",
+        body: JSON.stringify(input),
+      });
+      await loadSession();
+    },
+    [loadSession],
+  );
+
   const signOut = useCallback(async () => {
     await api("/api/auth/signout", { method: "POST" });
     setUser(null);
@@ -163,6 +208,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signUp,
       signInDemo,
+      signInAdmin,
+      registerAdmin,
       signOut,
       updateRole,
     }),
@@ -175,6 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signUp,
       signInDemo,
+      signInAdmin,
+      registerAdmin,
       signOut,
       updateRole,
     ],

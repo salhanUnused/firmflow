@@ -18,6 +18,7 @@ import {
   Users,
   X,
   CircuitBoard,
+  Shield,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,16 @@ export function Sidebar({
                 {user.role} · {user.title}
               </p>
             </div>
+          ) : null}
+          {user?.platformAdmin ? (
+            <Link
+              href="/admin/dashboard"
+              onClick={onClose}
+              className="flex min-h-10 items-center gap-3 rounded-md px-3 py-2 text-sm text-zinc-400 hover:bg-white/5 hover:text-white"
+            >
+              <Shield size={16} />
+              Platform
+            </Link>
           ) : null}
           <Link
             href="/settings"

@@ -25,6 +25,7 @@ export interface UserRecord {
   title: string;
   orgId: string;
   createdAt: string;
+  platformAdmin?: boolean;
 }
 
 export interface World {
@@ -106,18 +107,29 @@ async function writeToSupabase(client: SupabaseClient, world: World) {
   if (error) throw error;
 }
 
+function normalizeWorld(world: World) {
+  for (const user of world.users) {
+    if (user.platformAdmin == null) user.platformAdmin = false;
+  }
+}
+
 export async function loadWorld(): Promise<World> {
-  if (memory) return memory;
+  if (memory) {
+    normalizeWorld(memory);
+    return memory;
+  }
   const client = supabaseAdmin();
   if (client) {
     const remote = await readFromSupabase(client);
     if (remote?.version === 1) {
+      normalizeWorld(remote);
       memory = remote;
       return memory;
     }
   }
   const file = await readFromFile();
   if (file?.version === 1) {
+    normalizeWorld(file);
     memory = file;
     return memory;
   }

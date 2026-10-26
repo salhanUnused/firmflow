@@ -209,6 +209,37 @@ export interface AuthUser {
   orgId: string;
   orgName: string;
   plan: PlanId;
+  platformAdmin: boolean;
+}
+
+export interface PlatformOrgRow {
+  id: string;
+  name: string;
+  slug: string;
+  plan: PlanId;
+  createdAt: string;
+  seats: number;
+  devices: number;
+  firmware: number;
+  deployments: number;
+}
+
+export interface PlatformOverview {
+  persistence: string;
+  operators: Array<{
+    id: string;
+    email: string;
+    fullName: string;
+    createdAt: string;
+  }>;
+  orgs: PlatformOrgRow[];
+  totals: {
+    orgs: number;
+    users: number;
+    devices: number;
+    firmware: number;
+    deployments: number;
+  };
 }
 
 export interface ActivityItem {

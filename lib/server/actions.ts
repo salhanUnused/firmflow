@@ -14,7 +14,14 @@ import {
   verifyPassword,
 } from "@/lib/server/crypto";
 import { ensureSeed, HELIO_ORG_ID, HELIO_PROJECT_ID } from "@/lib/server/seed";
-import { readBlob, saveBlob, withWorld, type UserRecord, type World } from "@/lib/server/store";
+import {
+  persistenceMode,
+  readBlob,
+  saveBlob,
+  withWorld,
+  type UserRecord,
+  type World,
+} from "@/lib/server/store";
 import { formatRelative, initials, slugify, uid } from "@/lib/utils";
 import type {
   AlertRule,
@@ -25,7 +32,9 @@ import type {
   DeviceLog,
   FirmwareChannel,
   OrgState,
+  PlanId,
   Platform,
+  PlatformOverview,
   Project,
   RecoveryStrategy,
   UserRole,
@@ -114,6 +123,7 @@ function toAuthUser(world: World, user: UserRecord): AuthUser {
     orgId: user.orgId,
     orgName: org?.name ?? "Workspace",
     plan: org?.plan ?? "free",
+    platformAdmin: Boolean(user.platformAdmin),
   };
 }
 
@@ -281,8 +291,175 @@ export async function getStateForUser(userId: string) {
     return {
       user: toAuthUser(world, user),
       state: scopedState(world, user),
-      persistence: process.env.SUPABASE_SERVICE_ROLE_KEY ? "supabase" : "local",
+      persistence: persistenceMode(),
     };
+  });
+}
+
+function hasPlatformOperators(world: World) {
+  return world.users.some((item) => item.platformAdmin);
+}
+
+function requirePlatformAdmin(world: World, userId: string) {
+  const user = requireUser(world, userId);
+  if (!user.platformAdmin) {
+    throw new ForbiddenError("Platform console is only for FirmFlow operators.");
+  }
+  return user;
+}
+
+export async function signInPlatformAdmin(email: string, password: string) {
+  return withWorld(async (world) => {
+    await ensureSeed(world);
+    const user = world.users.find((item) => item.email === email.trim().toLowerCase());
+    if (!user || !verifyPassword(password, user.passwordHash)) {
+      throw new ApiError(401, "Email or password is wrong.");
+    }
+    if (!user.platformAdmin) {
+      throw new ApiError(403, "This sign-in is for platform operators. Use /login for a workspace.");
+    }
+    audit(world, user, "platform.sign_in", user.id, "Signed in to platform console");
+    return toAuthUser(world, user);
+  });
+}
+
+export async function signUpPlatformAdmin(
+  input: {
+    fullName: string;
+    email: string;
+    password: string;
+    orgName?: string;
+    inviteSecret?: string;
+  },
+  actorId?: string | null,
+) {
+  if (input.password.length < 8) {
+    throw new ApiError(400, "Password must be at least 8 characters.");
+  }
+  const envSecret = process.env.PLATFORM_ADMIN_SECRET?.trim();
+  return withWorld(async (world) => {
+    await ensureSeed(world);
+    const email = input.email.trim().toLowerCase();
+    if (world.users.some((item) => item.email === email)) {
+      throw new ApiError(409, "An account with that email already exists.");
+    }
+
+    const operatorsExist = hasPlatformOperators(world);
+    const actor = actorId ? world.users.find((item) => item.id === actorId) : null;
+    const secretOk = Boolean(envSecret && input.inviteSecret && input.inviteSecret === envSecret);
+    if (operatorsExist && !actor?.platformAdmin && !secretOk) {
+      throw new ApiError(
+        403,
+        "Platform registration is closed. Sign in as an operator, then invite from the console.",
+      );
+    }
+
+    const now = new Date().toISOString();
+    const orgId = uid("org");
+    const projectId = uid("proj");
+    const userId = uid("usr");
+    const orgName = input.orgName?.trim() || "FirmFlow ops";
+    world.orgs.push({
+      id: orgId,
+      name: orgName,
+      slug: slugify(orgName),
+      plan: "growth",
+      city: "",
+      createdAt: now,
+      usageMonth: currentMonthKey(),
+      deploymentsThisMonth: 0,
+    });
+    world.projects.push({
+      id: projectId,
+      orgId,
+      name: "Production",
+      slug: "production",
+      description: "Operator workspace",
+      createdAt: now,
+    });
+    await ensureFactoryFirmware(world, orgId, projectId);
+    const user: UserRecord = {
+      id: userId,
+      email,
+      passwordHash: hashPassword(input.password),
+      fullName: input.fullName.trim(),
+      role: "admin",
+      title: "Platform operator",
+      orgId,
+      createdAt: now,
+      platformAdmin: true,
+    };
+    world.users.push(user);
+    world.alertRules.push(
+      {
+        id: uid("rule"),
+        orgId,
+        name: "Device silent > 15 minutes",
+        enabled: true,
+        type: "device_offline",
+        threshold: 15,
+        notifyEmail: true,
+      },
+      {
+        id: uid("rule"),
+        orgId,
+        name: "OTA verification failed",
+        enabled: true,
+        type: "update_failed",
+        threshold: 1,
+        notifyEmail: true,
+      },
+    );
+    audit(world, user, "platform.operator_created", user.id, `Platform operator ${email}`);
+    return toAuthUser(world, user);
+  });
+}
+
+export async function getPlatformOverview(userId: string): Promise<PlatformOverview> {
+  return withWorld(async (world) => {
+    await ensureSeed(world);
+    requirePlatformAdmin(world, userId);
+    const orgs = world.orgs.map((org) => ({
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+      plan: org.plan,
+      createdAt: org.createdAt,
+      seats: world.users.filter((item) => item.orgId === org.id).length,
+      devices: world.devices.filter((item) => item.orgId === org.id).length,
+      firmware: world.firmware.filter((item) => item.orgId === org.id).length,
+      deployments: world.deployments.filter((item) => item.orgId === org.id).length,
+    }));
+    return {
+      persistence: persistenceMode(),
+      operators: world.users
+        .filter((item) => item.platformAdmin)
+        .map((item) => ({
+          id: item.id,
+          email: item.email,
+          fullName: item.fullName,
+          createdAt: item.createdAt,
+        })),
+      orgs,
+      totals: {
+        orgs: world.orgs.length,
+        users: world.users.length,
+        devices: world.devices.length,
+        firmware: world.firmware.length,
+        deployments: world.deployments.length,
+      },
+    };
+  });
+}
+
+export async function platformChangePlan(userId: string, orgId: string, plan: PlanId) {
+  return withWorld(async (world) => {
+    const user = requirePlatformAdmin(world, userId);
+    const org = orgOf(world, orgId);
+    if (!org) notFound("Organization");
+    org.plan = plan;
+    audit(world, user, "platform.plan_changed", org.id, `${org.name} → ${plan}`);
+    return org;
   });
 }
 
